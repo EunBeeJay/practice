@@ -1,23 +1,21 @@
+import { useEffect, useState } from "react";
 import styled from "styled-components";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
-import { useState } from "react";
 
-import FooterMenu from "../components/FooterMenu";
 import HeaderMenu from "../components/HeaderMenu";
-import { BodyContainer, Section } from "../styles/Style";
 import Question from "../components/Question";
-import QuestionUpload from "../modal/QuestionUpload";
-import { useEffect } from "react";
+import { BodyContainer, Section } from "../styles/Style";
+import FooterMenu from "../components/FooterMenu";
 
-const QnA = () => {
+/** 내 QnA 페이지 */
+const MyQnA = () => {
   const navigate = useNavigate();
   const [loggedIn, setLoggedIn] = useState(false);
   const [questions, setQuestions] = useState([]);
   const [ownId, setOwnId] = useState("");
 
   useEffect(() => {
-    loginValid();
     loadQnA();
   }, [questions]);
 
@@ -29,41 +27,38 @@ const QnA = () => {
       .catch(() => navigate("/sign-in"));
   };
 
-  /** 작성된 질문 불러오기 */
+  /** 작성된 내 질문 불러오기 */
   const loadQnA = async () => {
     await axios
-      .get("http://localhost:4000/qna", { withCredentials: true })
+      .get("http://localhost:4000/profile/myQna", { withCredentials: true })
       .then((response) => {
         const {
-          data: { questions, userId },
+          data: { myQnA, userId },
         } = response;
 
-        setQuestions(questions);
+        setQuestions(myQnA);
         setOwnId(userId);
       });
   };
 
   return (
-    <>
-      {loggedIn ? (
-        <BodyContainer>
-          <HeaderMenu />
-          <Section>
-            <QuestionList>
-              {questions.map((question, idx) => {
-                return <Question key={idx} question={question} ownId={ownId} />;
-              })}
-            </QuestionList>
-          </Section>
-          <QuestionUpload />
-          <FooterMenu />
-        </BodyContainer>
-      ) : null}
-    </>
+    <BodyContainer>
+      <HeaderMenu />
+      <Section>
+        <QuestionList>
+          {questions.map((question) => {
+            return (
+              <Question key={question._id} question={question} ownId={ownId} />
+            );
+          })}
+        </QuestionList>
+      </Section>
+      <FooterMenu />
+    </BodyContainer>
   );
 };
 
-export default QnA;
+export default MyQnA;
 
 const QuestionList = styled.div`
   margin-top: 50px;

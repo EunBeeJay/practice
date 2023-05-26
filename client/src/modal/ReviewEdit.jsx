@@ -1,18 +1,16 @@
 import styled from "styled-components";
 import { motion, AnimatePresence } from "framer-motion";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import {
-  faCommentAlt,
-  faPlus,
-  faTimes,
-  faStar,
-} from "@fortawesome/free-solid-svg-icons";
+import { faPlus, faTimes, faStar } from "@fortawesome/free-solid-svg-icons";
 
 import { useForm } from "react-hook-form";
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import axios from "axios";
 import { ErrorMessage } from "../styles/Error";
+
+import { ref, uploadString, getDownloadURL } from "@firebase/storage";
+import { storageService } from "../firebase";
 
 const overlayVariants = {
   inital: {
@@ -42,27 +40,12 @@ const pageVariants = {
   },
 };
 
-const buttonVariants = {
-  inital: {
-    opacity: 1,
-    scale: 1,
-    transition: { duration: 0 },
-  },
-  visible: { opacity: 1, scale: 1 },
-  hidden: {
-    opacity: 0,
-    scale: 1,
-    transition: { duration: 0.1 },
-  },
-};
-
-const ReviewUpload = () => {
+const ReviewEdit = ({ review }) => {
+  const location = useLocation();
   const navigate = useNavigate();
 
-  // 업로드 버튼 클릭 상태 관리
-  const [clickUploadTrigger, setClickUploadTrigger] = useState(false);
   // 미리보기 이미지
-  const [detailImgs, setDetailImgs] = useState([]);
+  const [previewImgs, setPreviewImgs] = useState([]);
   // 키워드
   const [keywords, setKeywords] = useState([]);
   const [keywordsValue, setKeywordsValue] = useState("");
@@ -76,42 +59,87 @@ const ReviewUpload = () => {
   ]);
   // 점수
   const [score, setScore] = useState(0);
-
+  const { state } = location;
+  const [clickEdit, setClickEdit] = useState(false);
   const {
     register,
     handleSubmit,
     formState: { errors },
     setError,
   } = useForm();
-  const onValid = async (data) => {
-    let formData = new FormData();
 
-    // 평점을 입력하지 않을 경우
-    if (score === 0) {
-      setError("score", { message: "평점을 입력해주세요." });
+  useEffect(() => {
+    loadReviewValue();
+    setClickEdit(state?.edit);
+  }, [state]);
+
+  /** 리뷰에 저장된 값들 불러오기 */
+  const loadReviewValue = async () => {
+    const { reviewId, keywords, score, images } = review;
+    let imgArr = [];
+
+    // 별점
+    let starState = Array.from(Array(5), () => false);
+    for (let i = 0; i < score; i++) {
+      starState[i] = true;
     }
 
-    data.score = score;
+    // 리뷰 이미지
+    for (let i = 0; i < images; i++) {
+      const fileRef = ref(storageService, `${reviewId}/${i}`);
+      const attachmentUrl = await getDownloadURL(fileRef);
+      imgArr.push(attachmentUrl);
+    }
+
+    setKeywords([...keywords]);
+    setStarGrade([...starState]);
+    setScore(score + 1);
+    setPreviewImgs([...imgArr]);
+  };
+
+  const onValid = async (data) => {
+    /* formData 를 이용한 전송방식. 이미지 업로드 안되는 문제
+    let formData = new FormData();
 
     formData.append("reviewData", JSON.stringify(data));
     formData.append("keywords", JSON.stringify(keywords));
-    formData.append("images", detailImgs);
+    formData.append("images", previewImgs.length);
+    */
 
-    console.log(data);
+    data._id = review._id;
+    data.score = score;
+    data.keywords = [...keywords];
+    data.images = previewImgs.length;
+
+    delete data.image;
 
     await axios
-      .post("http://localhost:4000/main/upload", formData, {
+      .post("http://localhost:4000/main/edit", data, {
         withCredentials: true,
         headers: {
-          "Content-Type": "multipart/form-data",
-        },
-        transformRequest: (data) => {
-          return data;
+          "Content-Type": "application/json",
         },
       })
-      .then(() => {
-        setClickUploadTrigger(false);
-        navigate("/");
+      .then(async (response) => {
+        const {
+          data: { review },
+        } = response;
+        console.log(review);
+        const { reviewId } = review;
+
+        // firebase 에 리뷰 사진 업로드
+        if (previewImgs.length) {
+          previewImgs.map(async (img, idx) => {
+            const fileRef = ref(storageService, `${reviewId}/${idx}`);
+            await uploadString(fileRef, img, "data_url");
+          });
+        }
+
+        navigate("/profile/myReview", { state: { review } });
+        setClickEdit(false);
+      })
+      .catch((err) => {
+        console.log(`리뷰 수정 클라이언트 ${err}`);
       });
   };
 
@@ -149,12 +177,11 @@ const ReviewUpload = () => {
           */
 
         fileUrls[i] = reader.result;
-        console.log(fileUrls[i]);
-        let validLength = detailImgs.length + fileUrls.length;
+        let validLength = previewImgs.length + fileUrls.length;
 
         // 최대 5장까지 업로드
         if (validLength < 6) {
-          setDetailImgs([...fileUrls, ...detailImgs]);
+          setPreviewImgs([...fileUrls, ...previewImgs]);
         } else {
           setError("image", { message: "* 최대 5장까지 업로드 가능합니다." });
         }
@@ -165,8 +192,8 @@ const ReviewUpload = () => {
 
   /** 프리뷰 이미지 삭제 */
   const handleDelPreview = (index) => {
-    const filesArr = detailImgs.filter((url, idx) => idx !== index);
-    setDetailImgs([...filesArr]);
+    const filesArr = previewImgs.filter((url, idx) => idx !== index);
+    setPreviewImgs([...filesArr]);
   };
 
   /** 키워드 입력 */
@@ -198,7 +225,6 @@ const ReviewUpload = () => {
   /** 별점 */
   const onClickStar = (index) => {
     let starState = Array.from(Array(5), () => false);
-    console.log(starState);
     for (let i = 0; i <= index; i++) {
       starState[i] = true;
     }
@@ -207,21 +233,15 @@ const ReviewUpload = () => {
     setStarGrade(starState);
   };
 
-  /** 업로드 화면으로 이동 */
-  const onClickUpload = () => {
-    setClickUploadTrigger((prev) => !prev);
-    navigate("/upload");
-  };
-
   /** 메인화면으로 이동 */
   const onClickMain = () => {
-    setClickUploadTrigger((prev) => !prev);
-    navigate("/");
+    setClickEdit(false);
+    navigate("/profile/myReview");
   };
   return (
     <>
       <AnimatePresence>
-        {clickUploadTrigger ? (
+        {clickEdit ? (
           <>
             <Overlay
               onClick={onClickMain}
@@ -236,11 +256,7 @@ const ReviewUpload = () => {
               animate="visible"
               exit="hidden"
             >
-              <form
-                onSubmit={handleSubmit(onValid)}
-                onKeyDown={onEnterDown}
-                encType="multipart/form-data"
-              >
+              <form onSubmit={handleSubmit(onValid)} onKeyDown={onEnterDown}>
                 <Group>
                   <Title>
                     <label htmlFor="category">카테고리</label>
@@ -250,6 +266,7 @@ const ReviewUpload = () => {
                     {...register("category", {
                       required: "* 카테고리를 선택해주세요",
                     })}
+                    defaultValue={review && review.category}
                   >
                     <option value="" style={{ display: "none" }}></option>
                     <option value="디지털기기">디지털기기</option>
@@ -272,6 +289,7 @@ const ReviewUpload = () => {
                     id="brand"
                     {...register("brand")}
                     placeholder="브랜드명을 입력하세요"
+                    defaultValue={review && review.brand}
                   />
                 </Group>
                 <Group>
@@ -282,6 +300,7 @@ const ReviewUpload = () => {
                     id="product"
                     {...register("product")}
                     placeholder="상품명을 입력하세요"
+                    defaultValue={review && review.product}
                   />
                 </Group>
                 <Group>
@@ -303,10 +322,17 @@ const ReviewUpload = () => {
                         name="images"
                         accept="image/*"
                         multiple
-                        onChange={handlePreview}
+                        {...register("image", {
+                          onChange: handlePreview,
+                          validate: () => {
+                            if (previewImgs.length < 1) {
+                              return "* 최소 1장의 이미지를 업로드해주세요.";
+                            }
+                          },
+                        })}
                       />
                     </Image>
-                    {detailImgs.map((url, index) => (
+                    {previewImgs.map((url, index) => (
                       <Preview
                         key={index}
                         style={{
@@ -332,6 +358,7 @@ const ReviewUpload = () => {
                     {...register("motivation", {
                       onChange: handleResizeHeight,
                     })}
+                    defaultValue={review && review.motivation}
                     rows={1}
                   ></Textarea>
                 </Group>
@@ -343,6 +370,7 @@ const ReviewUpload = () => {
                     {...register("adventages", {
                       onChange: handleResizeHeight,
                     })}
+                    defaultValue={review && review.adventages}
                     rows={1}
                   ></Textarea>
                 </Group>
@@ -354,6 +382,7 @@ const ReviewUpload = () => {
                     {...register("disadventages", {
                       onChange: handleResizeHeight,
                     })}
+                    defaultValue={review && review.disadventages}
                     rows={1}
                   ></Textarea>
                 </Group>
@@ -383,6 +412,18 @@ const ReviewUpload = () => {
                   </KeywordsBox>
                 </Group>
                 <Group>
+                  <input
+                    type="text"
+                    value={score}
+                    style={{ display: "none" }}
+                    {...register("score", {
+                      validate: () => {
+                        if (score === 0) {
+                          return "* 평점을 입력해주세요.";
+                        }
+                      },
+                    })}
+                  />
                   <StarRate>
                     {starGrade.map((th, idx) => {
                       return (
@@ -392,11 +433,13 @@ const ReviewUpload = () => {
                             icon={faStar}
                             size="3x"
                             color={starGrade[idx] ? "#FFDAB9" : "gray"}
+                            style={{ cursor: "pointer" }}
                           />
                         </span>
                       );
                     })}
                   </StarRate>
+                  <ErrorMessage>{errors?.score?.message}</ErrorMessage>
                 </Group>
                 <Group>
                   <UploadButton>리뷰 등록</UploadButton>
@@ -406,33 +449,16 @@ const ReviewUpload = () => {
           </>
         ) : null}
       </AnimatePresence>
-      <AnimatePresence>
-        {!clickUploadTrigger ? (
-          <UploadTrigger
-            onClick={onClickUpload}
-            variants={buttonVariants}
-            initial="inital"
-            animate="visible"
-            exit="hidden"
-          >
-            <Box>
-              <div>
-                <FontAwesomeIcon icon={faCommentAlt} />
-              </div>
-              <div>리뷰등록</div>
-            </Box>
-          </UploadTrigger>
-        ) : null}
-      </AnimatePresence>
     </>
   );
 };
 
-export default ReviewUpload;
+export default ReviewEdit;
 
 const Overlay = styled(motion.div)`
   position: fixed;
   top: 0;
+  left: 0;
   width: 100%;
   height: 100%;
   background-color: rgba(0, 0, 0, 0.5);

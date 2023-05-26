@@ -8,12 +8,16 @@ import { useNavigate } from "react-router-dom";
 
 const HeaderMenu = () => {
   const navigate = useNavigate();
-  const { register, handleSubmit, setError } = useForm();
+  const {
+    register,
+    handleSubmit,
+    setError,
+    formState: { errors },
+  } = useForm();
   const [searchOpen, setSearchOpen] = useState(false);
 
   const onValid = (data) => {
-    // navigate(`/search?keyword=${data.search}`)
-    // URLsearchparams 로 keyword 추출
+    navigate(`/search?keyword=${data.search}`);
   };
 
   const toggleSearch = () => setSearchOpen((prev) => !prev);
@@ -30,8 +34,11 @@ const HeaderMenu = () => {
               style={{ cursor: "pointer" }}
             />
             <Input
-              {...register("search", { maxLength: 2 })}
+              {...register("search", {
+                required: "한 글자 이상 입력해주세요.",
+              })}
               animate={{ scaleX: searchOpen ? 1 : 0 }}
+              placeholder={errors ? errors?.search?.message : ""}
             />
           </Search>
           <div>
@@ -52,6 +59,7 @@ const Header = styled.header`
   align-items: center;
   width: 100vw;
   padding: 15px;
+  border-bottom: 1px solid black;
   box-sizing: border-box;
   background-color: white;
   z-index: 5;
@@ -73,4 +81,10 @@ const Input = styled(motion.input)`
   position: absolute;
   left: -180px;
   transform-origin: right center;
+
+  &::placeholder {
+    font-size: 10px;
+    font-weight: bold;
+    color: red;
+  }
 `;

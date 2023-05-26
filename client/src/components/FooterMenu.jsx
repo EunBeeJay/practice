@@ -8,7 +8,7 @@ const FooterMenu = () => {
         <div>리뷰</div>
       </Link>
       <Link to="/qna" style={{ textDecoration: "none", color: "black" }}>
-        <div>QnA</div>
+        <div>질문</div>
       </Link>
       <Link to="/chat" style={{ textDecoration: "none", color: "black" }}>
         <div>채팅</div>

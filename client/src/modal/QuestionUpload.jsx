@@ -6,6 +6,7 @@ import { useForm } from "react-hook-form";
 
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faTimes } from "@fortawesome/free-solid-svg-icons";
+import axios from "axios";
 
 const overlayVariants = {
   inital: {
@@ -57,10 +58,26 @@ const QuestionUpload = () => {
   const [keywords, setKeywords] = useState([]);
   const [keywordsValue, setKeywordsValue] = useState("");
 
-  const onValid = (data) => {
+  const onValid = async (data) => {
     let formData = new FormData();
-
     console.log(data);
+    formData.append("data", JSON.stringify(data));
+    formData.append("keywords", JSON.stringify(keywords));
+
+    await axios
+      .post("http://localhost:4000/qna/upload", formData, {
+        withCredentials: true,
+        headers: {
+          "Content-Type": "application/json",
+        },
+      })
+      .then(() => {
+        setClickUploadTrigger(false);
+        navigate("/qna");
+      })
+      .catch((err) => {
+        console.log(`질문 업로드 클라이언트 에러: ${err}`);
+      });
   };
 
   // input 에 엔터 키 눌렀을 때 submit 방지
@@ -77,6 +94,7 @@ const QuestionUpload = () => {
   /** 업로드 화면으로 이동 */
   const onClickUpload = () => {
     setClickUploadTrigger(true);
+    navigate("/qna/upload");
   };
 
   /** 질문 페이지로 이동 */
@@ -147,7 +165,7 @@ const QuestionUpload = () => {
                   </Title>
                   <Textarea
                     rows={1}
-                    {...register("details", {
+                    {...register("detail", {
                       onChange: handleResizeHeight,
                     })}
                   />
