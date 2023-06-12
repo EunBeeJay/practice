@@ -63,6 +63,7 @@ const UserProfile = () => {
   const loadReview = async () => {
     await axios
       .get("http://localhost:4000/profile/myLikesReview", {
+        params: { userId },
         withCredentials: true,
       })
       .then((response) => {
@@ -145,7 +146,7 @@ const UserProfile = () => {
                     key={review._id}
                     review={review}
                     ownId={own._id}
-                    likes={likesArr}
+                    likes={own.reviewLikes}
                   />
                 );
               })
@@ -198,9 +199,6 @@ const ReviewBox = styled.div`
   display: flex;
   flex-direction: column;
   gap: 15px;
-  margin-bottom: 50px;
 `;
 
-const QuestionList = styled.div`
-  margin-top: 50px;
-`;
+const QuestionList = styled.div``;

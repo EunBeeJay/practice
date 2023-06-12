@@ -202,11 +202,28 @@ const ReviewBoard = () => {
   };
 
   /** 대화하기 클릭 시 채팅방 입장 */
-  const EnterChatRoom = async () => {
+  const enterChatRoom = async () => {
     const { userId } = review;
     await axios
       .get("http://localhost:4000/chat/room", {
         params: { othersId: userId },
+        withCredentials: true,
+      })
+      .then((response) => {
+        const {
+          data: { roomId },
+        } = response;
+
+        navigate(`/chat/${roomId}`, {
+          state: { roomId, profileImg },
+        });
+      });
+  };
+
+  const commentChatRoom = async (id) => {
+    await axios
+      .get("http://localhost:4000/chat/room", {
+        params: { othersId: id },
         withCredentials: true,
       })
       .then((response) => {
@@ -335,7 +352,7 @@ const ReviewBoard = () => {
               <div>user</div>
             </Name>
             {review.userId !== ownId ? (
-              <ChatLink onClick={EnterChatRoom}>대화하기</ChatLink>
+              <ChatLink onClick={enterChatRoom}>대화하기</ChatLink>
             ) : null}
           </User>
           <ReviewInfo>
@@ -363,6 +380,7 @@ const ReviewBoard = () => {
                       <span key={idx}>
                         <FontAwesomeIcon
                           icon={faStar}
+                          size="lg"
                           color={star ? "#FFDAB9" : "gray"}
                         />
                       </span>
@@ -392,7 +410,7 @@ const ReviewBoard = () => {
               <KeywordsTitle>공통 키워드</KeywordsTitle>
               <KeywordsBox>
                 {selectedKeywords.map((keyword, idx) => {
-                  return <button key={idx}>{keyword}</button>;
+                  return <KeywordBtn key={idx}>{keyword}</KeywordBtn>;
                 })}
               </KeywordsBox>
             </KeywordGroup>
@@ -400,17 +418,10 @@ const ReviewBoard = () => {
               <KeywordsTitle>직접 입력 키워드</KeywordsTitle>
               <KeywordsBox>
                 {review.keywords.map((keyword, idx) => {
-                  return <button key={idx}>{keyword}</button>;
+                  return <KeywordBtn key={idx}>{keyword}</KeywordBtn>;
                 })}
               </KeywordsBox>
             </KeywordGroup>
-            <Group>
-              <KeywordsBox>
-                {review.keywords.map((keyword, idx) => {
-                  return <button key={idx}>{keyword}</button>;
-                })}
-              </KeywordsBox>
-            </Group>
             <Group>
               <Motivation>
                 <div>구매동기</div>
@@ -430,9 +441,15 @@ const ReviewBoard = () => {
               </DisAdventages>
             </Group>
             <Group>
-              <LikeButton onClick={onClickLike}>
-                <span>좋아요</span>
-              </LikeButton>
+              {bool ? (
+                <CLButton onClick={onClickLike}>
+                  <span>좋아요</span>
+                </CLButton>
+              ) : (
+                <LikeButton onClick={onClickLike}>
+                  <span>좋아요</span>
+                </LikeButton>
+              )}
             </Group>
           </ReviewInfo>
           <Eval>
@@ -467,7 +484,7 @@ const ReviewBoard = () => {
                 value={commentValue}
                 rows={1}
               ></textarea>
-              <button>댓글 입력</button>
+              <Button>댓글</Button>
             </CommentInput>
           </form>
           <CommentViews>
@@ -489,9 +506,16 @@ const ReviewBoard = () => {
                             {comment.nickname} <span>{comment.createdAt}</span>
                           </div>
                           <div>
-                            <div>대화하기</div>
+                            <div
+                              onClick={() => commentChatRoom(comment.userId)}
+                            >
+                              대화하기
+                            </div>
                             {comment.userId === ownId ? (
-                              <div onClick={() => handleDelComment(comment)}>
+                              <div
+                                onClick={() => handleDelComment(comment)}
+                                style={{ color: "red" }}
+                              >
                                 삭제
                               </div>
                             ) : null}
@@ -519,9 +543,16 @@ const ReviewBoard = () => {
                                     <span>{reply.createdAt}</span>
                                   </div>
                                   <div>
-                                    <div>대화하기</div>
+                                    <div
+                                      onClick={() =>
+                                        commentChatRoom(reply.userId)
+                                      }
+                                    >
+                                      대화하기
+                                    </div>
                                     {reply.userId === ownId ? (
                                       <div
+                                        style={{ color: "red" }}
                                         onClick={() =>
                                           handleDelReply(comment, reply)
                                         }
@@ -556,11 +587,11 @@ const ReviewBoard = () => {
                           value={replyValue}
                           rows={1}
                         ></textarea>
-                        <button
+                        <Button
                           onClick={(event) => onValid_2(idx, comment, event)}
                         >
-                          댓글 전송
-                        </button>
+                          댓글
+                        </Button>
                       </ReplyInput>
                     </form>
                   </Comments>
@@ -591,7 +622,7 @@ const User = styled.div`
   justify-content: space-between;
   height: 40px;
   padding: 0 15px;
-  background-color: rgba(0, 0, 0, 0.3);
+  background-color: #909fc8;
 
   img {
     width: 30px;
@@ -642,6 +673,15 @@ const KeywordGroup = styled.div`
   max-width: 250px;
 `;
 
+const KeywordBtn = styled.button`
+  border-radius: 15px;
+  border-color: gray;
+  color: #5ba4e7;
+  font-weight: bold;
+  border: 1px solid gray;
+  background-color: #fffaf4;
+`;
+
 const Category = styled.button`
   font-weight: bold;
   cursor: pointer;
@@ -649,8 +689,8 @@ const Category = styled.button`
 
 const Image = styled.div`
   img {
-    width: 100px;
-    height: 100px;
+    width: 150px;
+    height: 150px;
     border-radius: 5px;
     object-fit: cover;
     cursor: pointer;
@@ -663,11 +703,14 @@ const ProductInfo = styled.div`
     margin-bottom: 5px;
     &:first-child {
       font-size: 12px;
-      color: gray;
+      font-weight: bold;
+      color: #009cdb;
     }
 
     &:nth-child(2) {
+      font-size: 20px;
       font-weight: bold;
+      color: gray;
     }
   }
 `;
@@ -742,7 +785,7 @@ const LikeButton = styled.button`
     7px 7px 20px 0px rgba(0, 0, 0, 0.1), 4px 4px 5px 0px rgba(0, 0, 0, 0.1);
   outline: none;
   color: #fff;
-  background-image: linear-gradient(315deg, #f0ecfc 0%, #c797eb 74%);
+  background-image: linear-gradient(315deg, #c5efed 0%, #9153d7 74%);
   font-family: "Lato", sans-serif;
   font-weight: 500;
   cursor: pointer;
@@ -827,12 +870,111 @@ const LikeButton = styled.button`
   }
 `;
 
+const CLButton = styled.button`
+  display: inline-block;
+  position: relative;
+  width: 130px;
+  height: 40px;
+  line-height: 42px;
+  padding: 0;
+  border-radius: 5px;
+  border: none;
+  box-shadow: inset 2px 2px 2px 0px rgba(255, 255, 255, 0.5),
+    7px 7px 20px 0px rgba(0, 0, 0, 0.1), 4px 4px 5px 0px rgba(0, 0, 0, 0.1);
+  outline: none;
+  color: #fff;
+  background-image: linear-gradient(315deg, #c5efed 0%, #9153d7 74%);
+  font-family: "Lato", sans-serif;
+  font-weight: 500;
+  cursor: pointer;
+
+  span {
+    position: relative;
+    display: block;
+    width: 100%;
+    height: 100%;
+  }
+
+  &:before,
+  &:after {
+    position: absolute;
+    content: "";
+    right: 0;
+    bottom: 0;
+    background: #c797eb;
+    /*box-shadow:  4px 4px 6px 0 rgba(255,255,255,.5),
+              -4px -4px 6px 0 rgba(116, 125, 136, .2), 
+    inset -4px -4px 6px 0 rgba(255,255,255,.5),
+    inset 4px 4px 6px 0 rgba(116, 125, 136, .3);*/
+    transition: all 0.3s ease;
+  }
+
+  &:before {
+    height: 0%;
+    width: 2px;
+  }
+
+  &:after {
+    width: 0%;
+    height: 2px;
+  }
+
+  &:before {
+    height: 100%;
+  }
+
+  &:after {
+    width: 100%;
+  }
+
+  & {
+    background: transparent;
+  }
+
+  & span {
+    color: #c797eb;
+  }
+
+  & span:before,
+  & span:after {
+    position: absolute;
+    content: "";
+    left: 0;
+    top: 0;
+    background: #c797eb;
+    /*box-shadow:  4px 4px 6px 0 rgba(255,255,255,.5),
+              -4px -4px 6px 0 rgba(116, 125, 136, .2), 
+    inset -4px -4px 6px 0 rgba(255,255,255,.5),
+    inset 4px 4px 6px 0 rgba(116, 125, 136, .3);*/
+    transition: all 0.3s ease;
+  }
+
+  & span:before {
+    width: 2px;
+    height: 0%;
+  }
+
+  & span:after {
+    height: 2px;
+    width: 0%;
+  }
+
+  & span:before {
+    height: 100%;
+  }
+
+  & span:after {
+    width: 100%;
+  }
+`;
+
 const Eval = styled.div`
   display: flex;
   align-items: center;
   height: 30px;
   padding-left: 15px;
-  background-color: rgba(0, 0, 0, 0.3);
+  background-color: #909fc8;
+  color: white;
   div {
     margin-right: 30px;
 
@@ -870,6 +1012,23 @@ const CommentInput = styled.div`
   }
 `;
 
+const Button = styled.button`
+  width: 50px;
+  min-width: 50px;
+  height: 30px;
+  padding: 0;
+  border: 1px solid gray;
+  border-radius: 20px;
+  background-color: #fffaf3;
+  color: blue;
+  font-weight: bold;
+  cursor: pointer;
+
+  &:hover {
+    background-color: #ffd197;
+  }
+`;
+
 const ReplyInput = styled(CommentInput)`
   display: none;
   margin-left: 30px;
@@ -877,7 +1036,9 @@ const ReplyInput = styled(CommentInput)`
 
 const Img = styled.img`
   width: 40px;
+  min-width: 40px;
   height: 40px;
+  min-height: 40px;
   border-radius: 20px;
   object-fit: cover;
 `;
@@ -938,7 +1099,9 @@ const CommentReplyBox = styled.div`
 
   img {
     width: 40px;
+    min-width: 40px;
     height: 40px;
+    min-height: 40px;
     border-radius: 20px;
     object-fit: cover;
   }

@@ -59,7 +59,14 @@ const EditProfile = () => {
 
     // 사진 변경 함수가 실행되면
     if (changeImage) {
+      const fileRef = ref(storageService, `${userProfile._id}/${imgId}`);
+      await uploadString(fileRef, profileImg, "data_url");
+      const attachmentUrl = await getDownloadURL(fileRef);
+
+      console.log(attachmentUrl);
+
       data.profileImg = imgId;
+      data.urlImg = attachmentUrl;
     }
 
     await axios
@@ -70,11 +77,6 @@ const EditProfile = () => {
         },
       })
       .then(async () => {
-        if (changeImage) {
-          const fileRef = ref(storageService, `${userProfile._id}/${imgId}`);
-          await uploadString(fileRef, profileImg, "data_url");
-        }
-
         navigate("/profile");
       })
       .catch((err) => console.log(`프로필 설정 client ${err}`));

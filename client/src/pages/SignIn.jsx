@@ -125,8 +125,15 @@ const Label = styled.label`
 `;
 
 const StyleInput = styled.input`
-  width: 250px;
-  height: 30px;
+  width: 258px;
+  height: 35px;
+  padding-left: 15px;
+  padding-right: 15px;
+  box-sizing: border-box;
+  border-width: 0;
+  border: 2px solid rebeccapurple;
+  border-radius: 5px;
+  font-size: 15px;
 `;
 
 const StyleButton = styled(StyleInput)`

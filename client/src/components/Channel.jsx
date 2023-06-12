@@ -183,7 +183,9 @@ const Channel = () => {
                 <MineContent>
                   <Time>{chat.time}</Time>
                   <Content>
-                    <div>{chat.text}</div>
+                    <div style={{ backgroundColor: "#ffd062" }}>
+                      {chat.text}
+                    </div>
                   </Content>
                 </MineContent>
               )}
@@ -277,9 +279,10 @@ const ContentBox = styled.div`
 `;
 
 const Content = styled.div`
+  font-family: Arial, Helvetica, sans-serif;
   div {
     &:first-child {
-      font-size: 15px;
+      font-size: 13px;
     }
 
     &:last-child {
@@ -288,7 +291,7 @@ const Content = styled.div`
       padding: 10px 5px;
       box-sizing: border-box;
       border-radius: 5px;
-      font-size: 15px;
+      font-size: 14px;
       background-color: rgba(0, 0, 0, 0.2);
     }
   }
@@ -299,6 +302,7 @@ const MineContent = styled.div`
   justify-content: flex-end;
   width: 100%;
   gap: 10px;
+  font-family: Arial, Helvetica, sans-serif;
 `;
 
 const Time = styled.div`

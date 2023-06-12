@@ -3,10 +3,12 @@ import styled from "styled-components";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 
-import HeaderMenu from "../components/HeaderMenu";
 import Question from "../components/Question";
 import { BodyContainer, Section } from "../styles/Style";
 import FooterMenu from "../components/FooterMenu";
+
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faArrowLeft } from "@fortawesome/free-solid-svg-icons";
 
 /** 내 QnA 페이지 */
 const MyQnA = () => {
@@ -41,9 +43,19 @@ const MyQnA = () => {
       });
   };
 
+  /** 뒤로 가기 */
+  const handleBackSpace = () => {
+    navigate("/profile");
+  };
+
   return (
     <BodyContainer>
-      <HeaderMenu />
+      <Header>
+        <div onClick={handleBackSpace}>
+          <FontAwesomeIcon icon={faArrowLeft} />
+          <span>내 질문</span>
+        </div>
+      </Header>
       <Section>
         <QuestionList>
           {questions.map((question) => {
@@ -60,6 +72,22 @@ const MyQnA = () => {
 
 export default MyQnA;
 
+const Header = styled.header`
+  display: fixed;
+  padding: 15px;
+  box-sizing: border-box;
+  border-bottom: 2px solid #aaaaaa;
+
+  div {
+    display: flex;
+    gap: 10px;
+    cursor: pointer;
+  }
+`;
+
 const QuestionList = styled.div`
-  margin-top: 50px;
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  margin-bottom: 50px;
 `;

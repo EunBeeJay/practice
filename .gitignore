@@ -11,8 +11,11 @@ client//coverage
 # production
 client//build
 
-#memo
+# memo
 client/memo
+
+# client dotenv
+client/.env
 
 # misc
 client/.DS_Store
@@ -25,5 +28,5 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 
-#server
+# server dotenv
 server/.env

@@ -24,7 +24,7 @@ const HeaderMenu = () => {
 
   return (
     <Header>
-      <h1>리뷰앱</h1>
+      <h1>리챗</h1>
       <form onSubmit={handleSubmit(onValid)}>
         <FontBox>
           <Search>
@@ -59,9 +59,9 @@ const Header = styled.header`
   align-items: center;
   width: 100vw;
   padding: 15px;
-  border-bottom: 1px solid black;
   box-sizing: border-box;
   background-color: white;
+  border-bottom: 2px solid #aaaaaa;
   z-index: 5;
 `;
 

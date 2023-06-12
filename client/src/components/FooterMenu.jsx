@@ -30,7 +30,7 @@ const MenuList = styled.div`
   bottom: 0;
   width: 100vw;
   height: 50px;
-  border-top: 1px solid black;
+  border-top: 2px solid #aaaaaa;
   background-color: white;
   z-index: 5;
   div {

@@ -58,7 +58,7 @@ const Question = ({ question, ownId }) => {
 
     if (pathname === "/qna" || pathname === "/profile/myQna") {
       const { questionId } = question;
-      navigate(`/qna/${questionId}`, { state: { question } });
+      navigate(`/qna/${questionId}`, { state: { question, profileImg } });
     }
   };
 
@@ -79,6 +79,15 @@ const Question = ({ question, ownId }) => {
           state: { roomId, profileImg },
         });
       });
+  };
+
+  /** 유저 프로필 이동 */
+  const userProfile = () => {
+    if (ownId === question.userId) {
+      navigate(`/profile`, { state: question.userId });
+    } else {
+      navigate(`/profile/${question.userId}`, { state: question.userId });
+    }
   };
 
   /** 질문 수정 */
@@ -103,7 +112,7 @@ const Question = ({ question, ownId }) => {
         <QuestionTab>
           <QuestionUser>
             <User>
-              <Name>
+              <Name onClick={userProfile}>
                 <img
                   src={
                     profileImg
@@ -118,7 +127,7 @@ const Question = ({ question, ownId }) => {
               ) : null}
               {editButton && (
                 <Edit>
-                  <div onClick={handleEdit}>수정하기</div>
+                  <div onClick={handleEdit}>수정</div>
                   <div onClick={handleDelete}>삭제</div>
                 </Edit>
               )}
@@ -129,7 +138,7 @@ const Question = ({ question, ownId }) => {
             <Detail>{question.detail}</Detail>
             <Keywords>
               {question.keywords.map((keyword, idx) => {
-                return <button key={idx}>{keyword}</button>;
+                return <KeywordBtn key={idx}>{keyword}</KeywordBtn>;
               })}
             </Keywords>
           </QuestionDetail>
@@ -160,10 +169,11 @@ const QuestionTab = styled.div`
 const QuestionUser = styled.div`
   display: flex;
   align-items: center;
-  height: 50px;
-  padding: 0 10px 0 10px;
+  height: 40px;
+  padding-right: 15px;
   box-sizing: border-box;
   border-bottom: 1px solid gray;
+  background-color: #909fc8;
 
   img {
     width: 30px;
@@ -196,6 +206,7 @@ const User = styled.div`
 const Name = styled.div`
   display: flex;
   align-items: center;
+  cursor: pointer;
 `;
 
 const ChatLink = styled.div`
@@ -218,7 +229,27 @@ const ChatLink = styled.div`
 
 const Edit = styled.div`
   display: flex;
-  gap: 5px;
+
+  div {
+    cursor: pointer;
+    padding: 3px;
+
+    &:first-child {
+      font-size: 15px;
+      font-weight: bold;
+      font-family: Arial, Helvetica, sans-serif;
+      color: #0044ff;
+    }
+
+    &:last-child {
+      font-size: 15px;
+      font-weight: bold;
+      font-family: Arial, Helvetica, sans-serif;
+      color: #e31c1c;
+    }
+  }
+
+  /*
   div {
     padding: 5px;
     box-sizing: border-box;
@@ -236,6 +267,7 @@ const Edit = styled.div`
       filter: brightness(0.7);
     }
   }
+  */
 `;
 
 const QuestionDetail = styled.div`
@@ -254,6 +286,15 @@ const Detail = styled.div`
 `;
 
 const Keywords = styled.div``;
+
+const KeywordBtn = styled.button`
+  border-radius: 15px;
+  border-color: gray;
+  color: #5ba4e7;
+  font-weight: bold;
+  border: 1px solid gray;
+  background-color: #fffaf4;
+`;
 
 const QuestionComment = styled.div`
   display: flex;

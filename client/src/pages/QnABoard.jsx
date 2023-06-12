@@ -1,4 +1,4 @@
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import styled from "styled-components";
 import axios from "axios";
 
@@ -15,11 +15,12 @@ import { useRef } from "react";
 
 /** QnA 페이지 상세 보기 */
 const QnABoard = () => {
+  const navigate = useNavigate();
   const replyRef = useRef([]);
   const commentRef = useRef([]);
   const location = useLocation();
   const {
-    state: { question },
+    state: { question, profileImg },
   } = location;
   const { register, handleSubmit } = useForm();
 
@@ -152,7 +153,7 @@ const QnABoard = () => {
       };
 
       await axios
-        .post("http://localhost:4000/main/reply", data, {
+        .post("http://localhost:4000/qna/reply", data, {
           withCredentials: true,
           headers: {
             "Content-Type": "application/json",
@@ -197,6 +198,23 @@ const QnABoard = () => {
     setReplyValue(value);
   };
 
+  const commentChatRoom = async (id) => {
+    await axios
+      .get("http://localhost:4000/chat/room", {
+        params: { othersId: id },
+        withCredentials: true,
+      })
+      .then((response) => {
+        const {
+          data: { roomId },
+        } = response;
+
+        navigate(`/chat/${roomId}`, {
+          state: { roomId, profileImg },
+        });
+      });
+  };
+
   /** 댓글 클릭 시 대댓글 작성 form 생성 */
   const handleReply = (idx, event) => {
     const { innerText } = event.target;
@@ -225,22 +243,22 @@ const QnABoard = () => {
   /** 댓글 삭제 */
   const handleDelComment = async (comment) => {
     await axios
-      .get("http://localhost:4000/main/delComment", {
+      .get("http://localhost:4000/qna/delComment", {
         params: { commentId: comment._id, questionId: question._id },
         withCredentials: true,
       })
       .then((response) => {
         const {
-          data: { review },
+          data: { question },
         } = response;
 
-        setComments(review.comments);
+        setComments(question.comments);
       });
   };
 
   const handleDelReply = async (comment, reply) => {
     await axios
-      .get("http://localhost:4000/main/delReply", {
+      .get("http://localhost:4000/qna/delReply", {
         params: {
           commentId: comment._id,
           replyId: reply._id,
@@ -250,10 +268,10 @@ const QnABoard = () => {
       })
       .then((response) => {
         const {
-          data: { review },
+          data: { question },
         } = response;
 
-        setComments(review.comments);
+        setComments(question.comments);
       });
   };
 
@@ -280,7 +298,7 @@ const QnABoard = () => {
                   value={commentValue}
                   rows={1}
                 ></textarea>
-                <button>댓글 입력</button>
+                <Button>댓글</Button>
               </CommentInput>
             </form>
             <CommentViews>
@@ -303,9 +321,16 @@ const QnABoard = () => {
                               <span>{comment.createdAt}</span>
                             </div>
                             <div>
-                              <div>대화하기</div>
+                              <div
+                                onClick={() => commentChatRoom(comment.userId)}
+                              >
+                                대화하기
+                              </div>
                               {comment.userId === owner._id ? (
-                                <div onClick={() => handleDelComment(comment)}>
+                                <div
+                                  onClick={() => handleDelComment(comment)}
+                                  style={{ color: "red" }}
+                                >
                                   삭제
                                 </div>
                               ) : null}
@@ -333,9 +358,16 @@ const QnABoard = () => {
                                       <span>{reply.createdAt}</span>
                                     </div>
                                     <div>
-                                      <div>대화하기</div>
+                                      <div
+                                        onClick={() =>
+                                          commentChatRoom(reply.userId)
+                                        }
+                                      >
+                                        대화하기
+                                      </div>
                                       {reply.userId === owner._id ? (
                                         <div
+                                          style={{ color: "red" }}
                                           onClick={() =>
                                             handleDelReply(comment, reply)
                                           }
@@ -370,11 +402,11 @@ const QnABoard = () => {
                             value={replyValue}
                             rows={1}
                           ></textarea>
-                          <button
+                          <Button
                             onClick={(event) => onValid_2(idx, comment, event)}
                           >
-                            댓글 전송
-                          </button>
+                            댓글
+                          </Button>
                         </ReplyInput>
                       </form>
                     </Comments>
@@ -405,15 +437,18 @@ const CommentBox = styled.div`
   margin-top: 50px;
 `;
 
+const Comments = styled.div``;
+
 const CommentInput = styled.div`
   display: flex;
-  align-items: flex-start;
   gap: 10px;
 
   textarea {
     width: 100%;
-    height: 36px;
+    height: 24px;
     line-height: 20px;
+    border: none;
+    border-bottom: 1px solid gray;
     resize: none;
     outline: none;
 
@@ -423,9 +458,33 @@ const CommentInput = styled.div`
   }
 `;
 
+const Button = styled.button`
+  width: 50px;
+  min-width: 50px;
+  height: 30px;
+  padding: 0;
+  border: 1px solid gray;
+  border-radius: 20px;
+  background-color: #fffaf3;
+  color: blue;
+  font-weight: bold;
+  cursor: pointer;
+
+  &:hover {
+    background-color: #ffd197;
+  }
+`;
+
+const ReplyInput = styled(CommentInput)`
+  display: none;
+  margin-left: 30px;
+`;
+
 const Img = styled.img`
   width: 40px;
+  min-width: 40px;
   height: 40px;
+  min-height: 40px;
   border-radius: 20px;
   object-fit: cover;
 `;
@@ -436,29 +495,21 @@ const CommentViews = styled.div`
   gap: 15px;
 `;
 
-const Comments = styled.div``;
-
 const Comment = styled.div`
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 10px;
+  width: 100%;
+  cursor: pointer;
 `;
 
 const Detail = styled.div`
   display: flex;
   flex-direction: column;
   gap: 5px;
+  width: 80vw;
 
   div {
-    &:first-child {
-      font-size: 13px;
-
-      span {
-        font-size: 10px;
-        color: gray;
-      }
-    }
-
     &:last-child {
       font-size: 15px;
     }
@@ -488,18 +539,15 @@ const UserDetail = styled.div`
   }
 `;
 
-const ReplyInput = styled(CommentInput)`
-  display: none;
-  margin-left: 30px;
-`;
-
 const CommentReplyBox = styled.div`
   display: flex;
   margin: 10px 0 10px 30px;
 
   img {
     width: 40px;
+    min-width: 40px;
     height: 40px;
+    min-height: 40px;
     border-radius: 20px;
     object-fit: cover;
   }

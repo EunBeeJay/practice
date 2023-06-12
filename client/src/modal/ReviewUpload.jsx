@@ -595,15 +595,22 @@ const KeywordsBox = styled.div`
   gap: 10px;
 `;
 
+const KeywordBtn = styled.button``;
+
 const Keyword = styled.div`
   display: flex;
   width: max-content;
   padding: 5px;
   box-sizing: border-box;
-  border-radius: 5px;
-  background-color: rgba(0, 0, 0, 0.3);
+  border-radius: 15px;
+  border-color: gray;
+  color: #5ba4e7;
+  font-weight: bold;
+  border: 1px solid gray;
+  background-color: #fffaf4;
   svg {
     margin-left: 5px;
+    color: red;
     cursor: pointer;
   }
 `;

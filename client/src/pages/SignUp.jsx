@@ -4,6 +4,9 @@ import { useEffect, useRef, useState } from "react";
 import styled from "styled-components";
 import axios from "axios";
 
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faArrowLeft } from "@fortawesome/free-solid-svg-icons";
+
 import { ErrorMessage } from "../styles/Error";
 
 /** 회원가입 */
@@ -116,7 +119,6 @@ const SignUp = () => {
         break;
     }
   };
-  console.log(commonKeywords);
 
   // handleSubmit 콜백 함수
   const onValid = async (data) => {
@@ -145,12 +147,22 @@ const SignUp = () => {
       });
   };
 
+  /** 뒤로가기 */
+  const onClickBack = () => {
+    navigate("/sign-in");
+  };
+
   return (
     <Container>
+      <Header>
+        <Back onClick={onClickBack}>
+          <FontAwesomeIcon icon={faArrowLeft} />
+        </Back>
+      </Header>
       <CenterBox>
-        <Header>
+        <Title>
           <h1>회원가입</h1>
-        </Header>
+        </Title>
         <form onSubmit={handleSubmit(onValid)}>
           <Group>
             <Label htmlFor="email">이메일</Label>
@@ -328,6 +340,27 @@ const SignUp = () => {
 
 export default SignUp;
 
+const Header = styled.header`
+  position: fixed;
+  display: flex;
+  justify-content: space-between;
+  width: 100%;
+  padding: 15px;
+  box-sizing: border-box;
+  background-color: white;
+  z-index: 10;
+
+  div {
+    &:last-child {
+      cursor: pointer;
+    }
+  }
+`;
+
+const Back = styled.div`
+  cursor: pointer;
+`;
+
 const Container = styled.div`
   position: relative;
   width: 100vw;
@@ -341,7 +374,7 @@ const CenterBox = styled.div`
   transform: translate(-50%, -50%);
 `;
 
-const Header = styled.header`
+const Title = styled.header`
   text-align: center;
   h1 {
     font-size: 24px;
@@ -369,8 +402,15 @@ const Label = styled.label`
 `;
 
 const StyleInput = styled.input`
-  width: 250px;
-  height: 30px;
+  width: 258px;
+  height: 35px;
+  padding-left: 15px;
+  padding-right: 15px;
+  box-sizing: border-box;
+  border-width: 0;
+  border: 2px solid rebeccapurple;
+  border-radius: 5px;
+  font-size: 15px;
 `;
 
 const StyleButton = styled(StyleInput)`

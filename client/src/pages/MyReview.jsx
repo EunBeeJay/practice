@@ -7,8 +7,13 @@ import HeaderMenu from "../components/HeaderMenu";
 import FooterMenu from "../components/FooterMenu";
 import ItemReview from "../components/ItemReview";
 
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faArrowLeft } from "@fortawesome/free-solid-svg-icons";
+import { useNavigate } from "react-router-dom";
+
 /** 내 리뷰 페이지 */
 const MyReview = () => {
+  const navigate = useNavigate();
   const [reviews, setReviews] = useState([]);
   const [likesArr, setLikesArr] = useState([]);
   const [ownId, setOwnId] = useState("");
@@ -32,9 +37,19 @@ const MyReview = () => {
         setOwnId(userId);
       });
   };
+
+  /** 뒤로 가기 */
+  const handleBackSpace = () => {
+    navigate("/profile");
+  };
   return (
     <BodyContainer>
-      <HeaderMenu />
+      <Header>
+        <div onClick={handleBackSpace}>
+          <FontAwesomeIcon icon={faArrowLeft} />
+          <span>내 리뷰</span>
+        </div>
+      </Header>
       <Section>
         <ReviewBox>
           {reviews.length &&
@@ -57,10 +72,22 @@ const MyReview = () => {
 
 export default MyReview;
 
+const Header = styled.header`
+  display: fixed;
+  padding: 15px;
+  box-sizing: border-box;
+  border-bottom: 2px solid #aaaaaa;
+
+  div {
+    display: flex;
+    gap: 10px;
+    cursor: pointer;
+  }
+`;
+
 const ReviewBox = styled.div`
   display: flex;
   flex-direction: column;
   gap: 15px;
-  margin-top: 50px;
   margin-bottom: 50px;
 `;

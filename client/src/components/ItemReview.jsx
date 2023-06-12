@@ -104,10 +104,10 @@ const ItemReview = ({ review, likes, ownId }) => {
 
   /** 유저 프로필 이동 */
   const userProfile = () => {
-    if (String(ownId) === String(review.userId)) {
+    if (ownId === review.userId) {
       navigate(`/profile`, { state: review.userId });
     } else {
-      navigate(`/profile/${review.userId}`);
+      navigate(`/profile/${review.userId}`, { state: review.userId });
     }
   };
 
@@ -216,7 +216,7 @@ const ItemReview = ({ review, likes, ownId }) => {
             ) : null}
             {editButton && (
               <Edit>
-                <motion.div onClick={handleEdit}>수정하기</motion.div>
+                <motion.div onClick={handleEdit}>수정</motion.div>
                 <div onClick={handleDelete}>삭제</div>
               </Edit>
             )}
@@ -244,6 +244,7 @@ const ItemReview = ({ review, likes, ownId }) => {
                       <span key={idx}>
                         <FontAwesomeIcon
                           icon={faStar}
+                          size="lg"
                           color={star ? "#FFDAB9" : "gray"}
                         />
                       </span>
@@ -256,7 +257,7 @@ const ItemReview = ({ review, likes, ownId }) => {
               <KeywordsTitle>공통 키워드</KeywordsTitle>
               <KeywordsBox>
                 {selectedKeywords.map((keyword, idx) => {
-                  return <button key={idx}>{keyword}</button>;
+                  return <KeywordBtn key={idx}>{keyword}</KeywordBtn>;
                 })}
               </KeywordsBox>
             </KeywordGroup>
@@ -264,7 +265,7 @@ const ItemReview = ({ review, likes, ownId }) => {
               <KeywordsTitle>직접 입력 키워드</KeywordsTitle>
               <KeywordsBox>
                 {review.keywords.map((keyword, idx) => {
-                  return <button key={idx}>{keyword}</button>;
+                  return <KeywordBtn key={idx}>{keyword}</KeywordBtn>;
                 })}
               </KeywordsBox>
             </KeywordGroup>
@@ -296,9 +297,15 @@ const ItemReview = ({ review, likes, ownId }) => {
               </Group>
             </HiddenGroup>
             <Group>
-              <LikeButton onClick={onClickLike}>
-                <span>좋아요</span>
-              </LikeButton>
+              {bool ? (
+                <CLButton onClick={onClickLike}>
+                  <span>좋아요</span>
+                </CLButton>
+              ) : (
+                <LikeButton onClick={onClickLike}>
+                  <span>좋아요</span>
+                </LikeButton>
+              )}
             </Group>
           </ReviewInfo>
           <Eval>
@@ -338,7 +345,7 @@ const User = styled.div`
   justify-content: space-between;
   height: 40px;
   padding: 0 15px;
-  background-color: rgba(0, 0, 0, 0.3);
+  background-color: #909fc8;
 
   img {
     width: 30px;
@@ -352,6 +359,7 @@ const User = styled.div`
 const Name = styled.div`
   display: flex;
   align-items: center;
+  cursor: pointer;
 `;
 
 const ChatLink = styled.div`
@@ -360,6 +368,7 @@ const ChatLink = styled.div`
   border: 1px solid gray;
   border-radius: 5px;
   background-color: white;
+  border: none;
   font-size: 15px;
   cursor: pointer;
 
@@ -375,6 +384,27 @@ const ChatLink = styled.div`
 const Edit = styled.div`
   display: flex;
   gap: 5px;
+
+  div {
+    cursor: pointer;
+    padding: 3px;
+
+    &:first-child {
+      font-size: 15px;
+      font-weight: bold;
+      font-family: Arial, Helvetica, sans-serif;
+      color: #0044ff;
+    }
+
+    &:last-child {
+      font-size: 15px;
+      font-weight: bold;
+      font-family: Arial, Helvetica, sans-serif;
+      color: #e31c1c;
+    }
+  }
+
+  /*
   div {
     padding: 5px;
     box-sizing: border-box;
@@ -392,6 +422,7 @@ const Edit = styled.div`
       filter: brightness(0.7);
     }
   }
+  */
 `;
 
 const ReviewInfo = styled.div`
@@ -437,11 +468,14 @@ const ProductInfo = styled.div`
     margin-bottom: 5px;
     &:first-child {
       font-size: 12px;
-      color: gray;
+      font-weight: bold;
+      color: #009cdb;
     }
 
     &:nth-child(2) {
+      font-size: 20px;
       font-weight: bold;
+      color: gray;
     }
   }
 `;
@@ -456,6 +490,15 @@ const KeywordsBox = styled.div`
   display: flex;
   flex-wrap: wrap;
   gap: 10px;
+`;
+
+const KeywordBtn = styled.button`
+  border-radius: 15px;
+  border-color: gray;
+  color: #5ba4e7;
+  font-weight: bold;
+  border: 1px solid gray;
+  background-color: #fffaf4;
 `;
 
 const Motivation = styled.div`
@@ -523,7 +566,7 @@ const LikeButton = styled.button`
     7px 7px 20px 0px rgba(0, 0, 0, 0.1), 4px 4px 5px 0px rgba(0, 0, 0, 0.1);
   outline: none;
   color: #fff;
-  background-image: linear-gradient(315deg, #f0ecfc 0%, #c797eb 74%);
+  background-image: linear-gradient(315deg, #c5efed 0%, #9153d7 74%);
   font-family: "Lato", sans-serif;
   font-weight: 500;
   cursor: pointer;
@@ -608,12 +651,111 @@ const LikeButton = styled.button`
   }
 `;
 
+const CLButton = styled.button`
+  display: inline-block;
+  position: relative;
+  width: 130px;
+  height: 40px;
+  line-height: 42px;
+  padding: 0;
+  border-radius: 5px;
+  border: none;
+  box-shadow: inset 2px 2px 2px 0px rgba(255, 255, 255, 0.5),
+    7px 7px 20px 0px rgba(0, 0, 0, 0.1), 4px 4px 5px 0px rgba(0, 0, 0, 0.1);
+  outline: none;
+  color: #fff;
+  background-image: linear-gradient(315deg, #c5efed 0%, #9153d7 74%);
+  font-family: "Lato", sans-serif;
+  font-weight: 500;
+  cursor: pointer;
+
+  span {
+    position: relative;
+    display: block;
+    width: 100%;
+    height: 100%;
+  }
+
+  &:before,
+  &:after {
+    position: absolute;
+    content: "";
+    right: 0;
+    bottom: 0;
+    background: #c797eb;
+    /*box-shadow:  4px 4px 6px 0 rgba(255,255,255,.5),
+              -4px -4px 6px 0 rgba(116, 125, 136, .2), 
+    inset -4px -4px 6px 0 rgba(255,255,255,.5),
+    inset 4px 4px 6px 0 rgba(116, 125, 136, .3);*/
+    transition: all 0.3s ease;
+  }
+
+  &:before {
+    height: 0%;
+    width: 2px;
+  }
+
+  &:after {
+    width: 0%;
+    height: 2px;
+  }
+
+  &:before {
+    height: 100%;
+  }
+
+  &:after {
+    width: 100%;
+  }
+
+  & {
+    background: transparent;
+  }
+
+  & span {
+    color: #c797eb;
+  }
+
+  & span:before,
+  & span:after {
+    position: absolute;
+    content: "";
+    left: 0;
+    top: 0;
+    background: #c797eb;
+    /*box-shadow:  4px 4px 6px 0 rgba(255,255,255,.5),
+              -4px -4px 6px 0 rgba(116, 125, 136, .2), 
+    inset -4px -4px 6px 0 rgba(255,255,255,.5),
+    inset 4px 4px 6px 0 rgba(116, 125, 136, .3);*/
+    transition: all 0.3s ease;
+  }
+
+  & span:before {
+    width: 2px;
+    height: 0%;
+  }
+
+  & span:after {
+    height: 2px;
+    width: 0%;
+  }
+
+  & span:before {
+    height: 100%;
+  }
+
+  & span:after {
+    width: 100%;
+  }
+`;
+
 const Eval = styled.div`
   display: flex;
   align-items: center;
   height: 30px;
   padding-left: 15px;
-  background-color: rgba(0, 0, 0, 0.3);
+  background-color: #909fc8;
+  color: white;
   div {
     margin-right: 30px;
 

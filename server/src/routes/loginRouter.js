@@ -8,7 +8,7 @@ const loginRouter = express.Router();
 
 /** 회원가입 */
 loginRouter.post("/sign-up", async (req, res) => {
-  const { email, password, nickname } = req.body;
+  const { email, password, nickname, common } = req.body;
 
   // 가입된 이메일 유효성 검사
   const accountExist = await User.exists({ email });
@@ -16,9 +16,15 @@ loginRouter.post("/sign-up", async (req, res) => {
   // 비밀번호 암호화
   const encodingPassword = await bcrypt.hash(password, 5);
 
-  // 중복되는 계정이 없는 경우 계정 생성
+  // 중복 계정 유효성 검사
   if (!accountExist) {
-    await User.create({ email, password: encodingPassword, nickname });
+    // 회원 계정 생성
+    await User.create({
+      email,
+      password: encodingPassword,
+      nickname,
+      common,
+    });
     return res.status(200).send({});
   } else {
     return res.status(409).send({ message: "가입된 이메일입니다." });
@@ -44,6 +50,7 @@ loginRouter.post("/sign-in", async (req, res) => {
 
     // 로그인 정보를 세션에 저장
     req.session.userId = userInfo._id;
+    req.session.nickname = userInfo.nickname;
 
     return res.status(200).send({});
   } else {

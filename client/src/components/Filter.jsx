@@ -40,10 +40,10 @@ const Filter = () => {
 
   /** 필터 클릭 시 필터 메뉴 숨기기 */
   const onClickFilter = () => {
-    setFilter(!filter);
+    setFilter((filter) => !filter);
 
     // filter 카테고리 버튼 숨기기 이거 때문에 변경안되는 중
-    if (filter) {
+    if (!filter) {
       filterRef.current.style.display = "flex";
     } else {
       filterRef.current.style.display = "none";
@@ -107,6 +107,12 @@ const FilterBtn = styled.div`
   button {
     margin-left: 10px;
     font-size: 10px;
+    border-radius: 15px;
+    border-color: gray;
+    color: #5ba4e7;
+    font-weight: bold;
+    border: 1px solid gray;
+    background-color: #fffaf4;
   }
 `;
 
@@ -118,5 +124,11 @@ const FilterCategory = styled.div`
 
   button {
     font-size: 10px;
+    border-radius: 15px;
+    border-color: gray;
+    color: #5ba4e7;
+    font-weight: bold;
+    border: 1px solid gray;
+    background-color: #fffaf4;
   }
 `;
